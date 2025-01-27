@@ -618,7 +618,8 @@ if __name__ == '__main__':
     Y_flat = torch.flatten(Y)
     sdf = obj_field.compute_signed_distance(torch.stack((X_flat, Y_flat), dim=-1).view(-1, 1, 2))
     sdf = sdf.reshape(X.shape)
-    sdf_np = to_numpy(sdf)
+    sdf_np = to_numpy(sdf) # NOTE: [400,400], sdf_np is the signed distance field; encode it as observation of diffusion
+    print(sdf_np.shape)
     ctf = ax.contourf(to_numpy(X), to_numpy(Y), sdf_np)
     fig.colorbar(ctf, orientation='vertical')
     ax.set_xlim(-1, 1)
@@ -635,7 +636,8 @@ if __name__ == '__main__':
     f_grad_sdf = lambda x: obj_field.compute_signed_distance(x).sum()
     grad_sdf = jacobian(f_grad_sdf, stacked_tensors)
 
-    grad_sdf_np = to_numpy(grad_sdf).squeeze()
+    grad_sdf_np = to_numpy(grad_sdf).squeeze() # [20*20,2], 
+    print(grad_sdf_np.shape)
     ax.quiver(to_numpy(X_flat), to_numpy(Y_flat),
               grad_sdf_np[:, 0], grad_sdf_np[:, 1],
               color='red')

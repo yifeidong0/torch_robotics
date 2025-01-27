@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
@@ -5,6 +6,7 @@ from matplotlib import pyplot as plt
 from torch_robotics.environments.env_base import EnvBase
 from torch_robotics.environments.primitives import ObjectField, MultiSphereField, MultiBoxField
 from torch_robotics.environments.utils import create_grid_spheres
+from torch_robotics.environments.grid_map_sdf import GridMapSDF
 from torch_robotics.robots import RobotPointMass
 from torch_robotics.torch_utils.torch_utils import DEFAULT_TENSOR_ARGS
 from torch_robotics.visualizers.planning_visualizer import create_fig_and_axes
@@ -18,6 +20,9 @@ class EnvCage2D(EnvBase):
                  sdf_cell_size=0.005,
                  **kwargs
                  ):
+        self.precompute_sdf_obj_fixed = precompute_sdf_obj_fixed
+        self.tensor_args = tensor_args 
+        self.sdf_cell_size = sdf_cell_size
         obj_list = [
             MultiSphereField(
                 np.array(
@@ -44,6 +49,38 @@ class EnvCage2D(EnvBase):
             tensor_args=tensor_args,
             **kwargs
         )
+
+    def update_obstacles(self, sphere_centers, shpere_radii):
+        """
+        Update the obstacles (obj_list) and other related variables.
+
+        Parameters:
+        """
+        # Re-initialize the obj_fixed_list with the new obstacles
+        new_obj_list = [
+            MultiSphereField(
+                sphere_centers,
+                shpere_radii,
+                tensor_args=self.tensor_args
+            ),
+        ]
+        self.obj_fixed_list = [ObjectField(new_obj_list, 'cage2d')]
+        self.obj_all_list = set(itertools.chain.from_iterable((
+            self.obj_fixed_list if self.obj_fixed_list is not None else [],
+            self.obj_extra_list if self.obj_extra_list is not None else [])
+        ))
+
+        # Update the SDF of the environment if precomputing is enabled
+        if self.precompute_sdf_obj_fixed:
+            self.grid_map_sdf_obj_fixed = GridMapSDF(
+                self.limits, self.sdf_cell_size, self.obj_fixed_list, tensor_args=self.tensor_args
+            )
+
+        # Recompute occupancy map if necessary
+        # self.build_occupancy_map(self.cell_size)
+
+        # Optionally, re-render the environment after updating obstacles
+        # self.render(ax) # You can render again if desired.
 
     def get_rrt_connect_params(self, robot=None):
         params = dict(
@@ -113,6 +150,17 @@ if __name__ == '__main__':
         sdf_cell_size=0.01,
         tensor_args=DEFAULT_TENSOR_ARGS
     )
+    sphere_centers = np.array(
+        [[ 0.4, -0.1],
+        [ 0.3, -0.3],
+        [ 0.1,  -0.4],
+        [-0.2, -0.4],
+        [-0.3, -0.3],
+        [-0.5,  0.1]]
+    )
+    sphere_radii = np.array([0.2, 0.3, 0.3, 0.3, 0.2, 0.27])
+    env.update_obstacles(sphere_centers, sphere_radii)
+
     fig, ax = create_fig_and_axes(env.dim)
     env.render(ax)
     plt.show()
