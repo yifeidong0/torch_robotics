@@ -50,7 +50,40 @@ class EnvCage2D(EnvBase):
             **kwargs
         )
 
-    def update_obstacles(self, sphere_centers, shpere_radii):
+    def generate_rand_obstacles(self, n_obstacles=6):
+        """
+        Generate random obstacles in the environment.
+
+        Parameters:
+        n_obstacles (int): Number of obstacles to generate.
+        """
+        # TODO: update it together with dataset generation
+
+        # Generate random circles with centers on the lower half of the circle
+        radii = []
+        centers = []
+        for i in range(n_obstacles):
+            # Randomize the radius of each circle between 0.1 and 0.2 (larger radii)
+            radius = np.random.uniform(0.12, 0.28)
+            radii.append(radius)  # Keeping as ellipses [radius, radius]
+
+            # Generate random angles for uniform distribution along the semicircle
+            angle = np.linspace(0, np.pi, n_obstacles)[i] + np.random.uniform(-0.2, 0.2)  # Only the lower half circle (y < 0.5)
+
+            # Calculate the x and y coordinates from the angle
+            x_pos = 0 + np.cos(angle) * 0.5  # x is centered at 0.5 with radius 1
+            y_pos = 0 - np.sin(angle) * 0.5  # y is always less than 0.5 (below the center)
+
+            centers.append([x_pos, y_pos])
+
+        # Convert to numpy arrays
+        centers = np.array(centers)
+        radii = np.array(radii)
+        self.update_obstacles(centers, radii)
+
+        return centers, radii
+    
+    def update_obstacles(self, sphere_centers, sphere_radii):
         """
         Update the obstacles (obj_list) and other related variables.
 
@@ -60,7 +93,7 @@ class EnvCage2D(EnvBase):
         new_obj_list = [
             MultiSphereField(
                 sphere_centers,
-                shpere_radii,
+                sphere_radii,
                 tensor_args=self.tensor_args
             ),
         ]
