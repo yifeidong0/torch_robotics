@@ -20,6 +20,7 @@ class EnvCage2D(EnvBase):
                  sdf_cell_size=0.005,
                  **kwargs
                  ):
+        self.env_name = 'EnvCage2D'
         self.precompute_sdf_obj_fixed = precompute_sdf_obj_fixed
         self.tensor_args = tensor_args 
         self.sdf_cell_size = sdf_cell_size
