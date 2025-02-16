@@ -40,7 +40,10 @@ class PlanningVisualizer:
             self.planner.render(ax)
         self.env.render(ax)
         if trajs is not None:
-            _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.task.get_trajs_collision_and_free(trajs, return_indices=True)
+            if self.task.use_pb_collision_detection:
+                trajs_coll_idxs, trajs_free_idxs = self.task.get_trajs_collision_and_free_pb(trajs, return_indices=True)
+            else:
+                _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.task.get_trajs_collision_and_free(trajs, return_indices=True)
             kwargs['colors'] = []
             for i in range(len(trajs_coll_idxs) + len(trajs_free_idxs)):
                 kwargs['colors'].append(self.colors['collision'] if i in trajs_coll_idxs else self.colors['free'])
@@ -147,7 +150,10 @@ class PlanningVisualizer:
         B, H, D = trajs_np.shape
 
         # Separate trajectories in collision and free (not in collision)
-        trajs_coll, trajs_free = self.task.get_trajs_collision_and_free(trajs)
+        if self.task.use_pb_collision_detection: # TODO:
+            trajs_coll, trajs_free = self.task.get_trajs_collision_and_free_pb(trajs, return_indices=False)
+        else:
+            trajs_coll, trajs_free = self.task.get_trajs_collision_and_free(trajs)
 
         trajs_coll_pos_np = to_numpy([])
         trajs_coll_vel_np = to_numpy([])

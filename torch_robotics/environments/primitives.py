@@ -499,13 +499,20 @@ MultiBoxField = MultiRoundedBoxField
 #         return f"Capsule(center={self.center}, radius={self.radius}, height={self.height})"
 #
 #
-# class MeshField(PrimitiveShapeField):
-#     """
-#     Represents a mesh as a primitive shape.
-#     """
-#
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
+class MeshField(PrimitiveShapeField):
+    """
+    Represents a mesh as a primitive shape.
+    """
+
+    def __init__(self, mesh, **kwargs):
+        self.mesh = mesh
+        super().__init__(**kwargs)
+
+    # def compute_signed_distance_impl(self, x):
+
+    # def add_to_occupancy_map(self, obst_map):
+
+    # def render(self, ax, pos=None, ori=None, color=None, **kwargs):
 
 
 ########################################################################################################################

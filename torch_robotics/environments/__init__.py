@@ -13,4 +13,4 @@ from .env_spheres_3d_extra_objects import *
 from .env_square_2d import *
 from .env_table_shelf import *
 from .env_cage_2d import *
-
+from .env_hook_3d import *

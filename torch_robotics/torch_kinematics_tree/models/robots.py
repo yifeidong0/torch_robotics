@@ -131,3 +131,13 @@ class Differentiable2LinkPlanar(DifferentiableTree):
         self.model_path = robot_file.as_posix()
         self.name = "differentiable_2_link_planar"
         super().__init__(self.model_path, self.name, link_list=link_list, device=device)
+
+
+class DifferentiableRigid3D(DifferentiableTree):
+    def __init__(self, device='cpu'):
+        """A differentiable representation of a rigid 3D body."""
+        robot_file = get_robot_path() / 'rigid_3d' / 'tape' / 'tape.urdf'
+        self.model_path = robot_file.as_posix()
+        self.name = 'differentiable_rigid3d'
+        super().__init__(self.model_path, self.name, device=device)
+

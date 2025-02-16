@@ -16,11 +16,15 @@ class RobotPointMass(RobotBase):
                  name='RobotPointMass',
                  q_limits=torch.tensor([[-1, -1], [1, 1]]),  # configuration space limits
                  **kwargs):
+        if 'object_radius' in kwargs:
+            link_names_for_object_collision_checking = kwargs['object_radius']
+        else:
+            link_names_for_object_collision_checking = 0.01
         super().__init__(
             name=name,
             q_limits=to_torch(q_limits, **kwargs['tensor_args']),
             link_names_for_object_collision_checking=['link_0'],
-            # link_margins_for_object_collision_checking=[0.01],
+            link_margins_for_object_collision_checking=[link_names_for_object_collision_checking],
             link_idxs_for_object_collision_checking=[0],
             num_interpolated_points_for_object_collision_checking=1,
             **kwargs
@@ -116,7 +120,7 @@ class RobotSphere3D(RobotPointMass3D):
     """
     def __init__(self, radius: float = 0.15, **kwargs):
         # Set the collision margin to be the sphere's radius.
-        kwargs['link_margins_for_object_collision_checking'] = [radius]
+        kwargs['object_radius'] = radius
         super().__init__(**kwargs)
         self.radius = radius
 
@@ -166,7 +170,7 @@ class RobotSphere3D(RobotPointMass3D):
             else:
                 ax.plot(goal_state_np[0], goal_state_np[1], marker='o', color='purple', markersize=7)
 
-                
+
 if __name__ == "__main__":
     # Create a 3D sphere robot with radius 0.2
     tensor_args = {'dtype': torch.float32, 'device': 'cpu'}

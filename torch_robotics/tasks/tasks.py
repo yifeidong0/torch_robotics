@@ -6,6 +6,10 @@ import einops
 import numpy as np
 import torch
 
+import pybullet as p
+import pybullet_data
+import time
+
 from torch_robotics.torch_planning_objectives.fields.distance_fields import CollisionWorkspaceBoundariesDistanceField, \
     CollisionSelfField, CollisionObjectDistanceField
 from torch_robotics.trajectory.utils import interpolate_traj_via_points
@@ -307,22 +311,113 @@ class PlanningTask(Task):
             return trajs_coll, trajs_coll_idxs, trajs_free, trajs_free_idxs, trajs_waypoints_collisions
         return trajs_coll, trajs_free
 
+    def get_trajs_collision_and_free_pb(self, trajs, return_indices=True, use_gui=False):
+        """Checks collision for multiple trajectories using PyBullet.
+        
+        Args:
+            trajs (numpy.ndarray): Shape (N, T, 6), where N=25 (trajectories), T=64 (waypoints), 6=(3 pos + 3 vel).
+            return_indices (bool): Whether to return indices of colliding/free trajectories.
+            use_gui (bool): Whether to visualize the simulation.
+            
+        Returns:
+            trajs_coll_idxs (list): Indices of trajectories that result in collision.
+            trajs_free_idxs (list): Indices of trajectories that are collision-free.
+        """
+        
+        # env_filename = "slatwall-hook/slatwall_hook.urdf"
+        # robot_filename = "tape/tape.urdf"
+        env_filename = self.env.env_filename
+        robot_filename = self.robot.robot_filename
+        print('^^^^^^^^^^^^trajs.shape)', trajs.shape)
+
+        # Initialize PyBullet
+        if use_gui:
+            p.connect(p.GUI)
+        else:
+            p.connect(p.DIRECT)
+        
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())  # Set default URDF path
+        p.setGravity(0, 0, -9.81)
+
+        num_waypoints = trajs.shape[1] * trajs.shape[0]
+        trajs_coll_idxs = []
+        trajs_free_idxs = []
+        count_coll = 0
+        for traj_idx, trajectory in enumerate(trajs):
+            # Extract only position (first 3 elements of each waypoint)
+            positions = trajectory[:, :3]
+
+            # Load objects
+            # fixed_body = p.loadURDF(env_filename, basePosition=[0, 0, 0], useFixedBase=True)
+            fixed_body = p.loadURDF(env_filename, basePosition=self.env.env_position, baseOrientation=self.env.env_quaternion, useFixedBase=True)
+            moving_body = p.loadURDF(robot_filename, basePosition=positions[0])
+
+            collision_detected = False
+
+            # Simulation loop for the trajectory
+            for step, pos in enumerate(positions):
+                # Update robot position
+                p.resetBasePositionAndOrientation(moving_body, pos, [0, 0, 0, 1])
+                p.stepSimulation()
+                time.sleep(0.03) if use_gui else None
+                
+                # Check for collisions
+                contact_points = p.getContactPoints(moving_body, fixed_body)
+                if len(contact_points) > 0:
+                    # print(f"Collision detected at traj {traj_idx}, step {step}, position {pos}")
+                    collision_detected = True
+                    # break  # Stop checking further waypoints for this trajectory
+                    count_coll += 1
+
+            # Store result
+            if collision_detected:
+                trajs_coll_idxs.append(traj_idx)
+            else:
+                trajs_free_idxs.append(traj_idx)
+
+            # Remove objects from simulation
+            p.removeBody(moving_body)
+            p.removeBody(fixed_body)
+
+        p.disconnect()
+        self.collision_intensity = count_coll / num_waypoints
+        trajs_coll_idxs = torch.tensor(trajs_coll_idxs, dtype=torch.long)
+        trajs_free_idxs = torch.tensor(trajs_free_idxs, dtype=torch.long)
+        print(f"$$$$$$$$$$$$$$$$$Collision intensity: {self.collision_intensity}")
+        print(f"Collision-free trajectories: {len(trajs_free_idxs)}")
+        print(f"Trajectories in collision: {len(trajs_coll_idxs)}")
+        if return_indices:
+            return trajs_coll_idxs, trajs_free_idxs
+        else:
+            return trajs[trajs_coll_idxs,:,:], trajs[trajs_free_idxs,:,:]
+
     def compute_fraction_free_trajs(self, trajs, **kwargs):
         # Compute the fractions of trajs that are collision free
-        _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.get_trajs_collision_and_free(trajs, return_indices=True)
+        self.use_pb_collision_detection = 1 if self.env.env_name == 'EnvHook3D' else 0
+        if self.use_pb_collision_detection:
+            trajs_coll_idxs, trajs_free_idxs = self.get_trajs_collision_and_free_pb(trajs, return_indices=True)
+        else:
+            _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.get_trajs_collision_and_free(trajs, return_indices=True)
         n_trajs_free = trajs_free_idxs.nelement()
         n_trajs_coll = trajs_coll_idxs.nelement()
-        return n_trajs_free/(n_trajs_free + n_trajs_coll)
-
+        self.fraction_free = n_trajs_free/(n_trajs_free + n_trajs_coll)
+        return self.fraction_free
+    
     def compute_collision_intensity_trajs(self, trajs, **kwargs):
         # Compute the fraction of waypoints that are in collision
-        _, _, _, _, trajs_waypoints_collisions = self.get_trajs_collision_and_free(trajs, return_indices=True)
-        return torch.count_nonzero(trajs_waypoints_collisions)/trajs_waypoints_collisions.nelement()
+        if self.use_pb_collision_detection:
+            return self.collision_intensity
+        else:
+            _, _, _, _, trajs_waypoints_collisions = self.get_trajs_collision_and_free(trajs, return_indices=True)
+            return torch.count_nonzero(trajs_waypoints_collisions)/trajs_waypoints_collisions.nelement()
 
     def compute_success_free_trajs(self, trajs, **kwargs):
         # If at least one trajectory is collision free, then we consider success
-        _, trajs_free = self.get_trajs_collision_and_free(trajs)
-        if trajs_free is not None:
-            if trajs_free.nelement() >= 1:
-                return 1
-        return 0
+        if self.use_pb_collision_detection:
+            return int(self.fraction_free > 0)
+        else:
+            _, trajs_free = self.get_trajs_collision_and_free(trajs)
+            if trajs_free is not None:
+                if trajs_free.nelement() >= 1:
+                    return 1
+            return 0
