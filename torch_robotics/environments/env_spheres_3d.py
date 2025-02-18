@@ -132,13 +132,13 @@ class EnvSpheres3D(EnvBase):
                     [0.45, 0.35, 0.],
                     [0.55, 0.35, 0.55],
                     [0.65, -0.4, 0.25],
-                    # [0.2, -0.35, 0.5],
-                    # [0.35, 0.0, 0.9],
-                    # [0., -0.3, 0.0],
-                    # [0.0, 0.45, 0.35],
+                    [0.2, -0.35, 0.5],
+                    [0.35, 0.0, 0.9],
+                    [0., -0.3, 0.0],
+                    [0.0, 0.45, 0.35],
                 ], **tensor_args)
-        # radii = torch.tensor([0.15,]*10, **tensor_args)
-        radii = torch.tensor([0.15,]*6, **tensor_args)
+        radii = torch.tensor([0.15,]*10, **tensor_args)
+        # radii = torch.tensor([0.15,]*6, **tensor_args)
         spheres = MultiSphereField(centers, radii, tensor_args=tensor_args)
 
         obj_field = ObjectField([spheres], 'spheres')

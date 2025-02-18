@@ -13,13 +13,13 @@ from torch_robotics.visualizers.planning_visualizer import create_fig_and_axes
 class EnvSimple2D(EnvBase):
 
     def __init__(self,
-                 name='EnvDense2D',
+                 name='EnvSimple2D',
                  tensor_args=None,
                  precompute_sdf_obj_fixed=True,
                  sdf_cell_size=0.005,
                  **kwargs
                  ):
-
+        self.env_name = 'EnvSimple2D'
         obj_list = [
             MultiSphereField(
                 np.array(

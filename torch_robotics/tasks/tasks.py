@@ -34,6 +34,7 @@ class PlanningTask(Task):
             **kwargs
     ):
         super().__init__(**kwargs)
+        self.use_pb_collision_detection = 1 if self.env.env_name in ['EnvHook3D',] else 0 # NOTE
         self.ws_limits = self.env.limits if ws_limits is None else ws_limits
         self.ws_min = self.ws_limits[0]
         self.ws_max = self.ws_limits[1]
@@ -346,24 +347,32 @@ class PlanningTask(Task):
         for traj_idx, trajectory in enumerate(trajs):
             # Extract only position (first 3 elements of each waypoint)
             positions = trajectory[:, :3]
+            orientations = trajectory[:, 3:]
 
             # Load objects
-            # fixed_body = p.loadURDF(env_filename, basePosition=[0, 0, 0], useFixedBase=True)
-            fixed_body = p.loadURDF(env_filename, basePosition=self.env.env_position, baseOrientation=self.env.env_quaternion, useFixedBase=True)
-            moving_body = p.loadURDF(robot_filename, basePosition=positions[0])
+            fixed_body = p.loadURDF(env_filename, 
+                                    basePosition=self.env.env_position, 
+                                    baseOrientation=self.env.env_quaternion, 
+                                    useFixedBase=True,
+                                    globalScaling=self.env.obstacle_scale)
+            moving_body = p.loadURDF(robot_filename, 
+                                     basePosition=positions[0],
+                                     baseOrientation=p.getQuaternionFromEuler(orientations[0]),
+                                     globalScaling=self.robot.object_scale)
 
             collision_detected = False
 
             # Simulation loop for the trajectory
             for step, pos in enumerate(positions):
                 # Update robot position
-                p.resetBasePositionAndOrientation(moving_body, pos, [0, 0, 0, 1])
+                p.resetBasePositionAndOrientation(moving_body, pos, p.getQuaternionFromEuler(orientations[step]))
                 p.stepSimulation()
-                time.sleep(0.03) if use_gui else None
+                time.sleep(0.1) if use_gui else None
                 
                 # Check for collisions
-                contact_points = p.getContactPoints(moving_body, fixed_body)
-                if len(contact_points) > 0:
+                # contact_points = p.getContactPoints(moving_body, fixed_body)
+                num_contacts = len(p.getClosestPoints(bodyA=moving_body, bodyB=fixed_body, distance=-0.025))
+                if num_contacts > 0:
                     # print(f"Collision detected at traj {traj_idx}, step {step}, position {pos}")
                     collision_detected = True
                     # break  # Stop checking further waypoints for this trajectory
@@ -381,19 +390,18 @@ class PlanningTask(Task):
 
         p.disconnect()
         self.collision_intensity = count_coll / num_waypoints
-        trajs_coll_idxs = torch.tensor(trajs_coll_idxs, dtype=torch.long)
-        trajs_free_idxs = torch.tensor(trajs_free_idxs, dtype=torch.long)
+        self.trajs_coll_idxs = torch.tensor(trajs_coll_idxs, dtype=torch.long)
+        self.trajs_free_idxs = torch.tensor(trajs_free_idxs, dtype=torch.long)
         print(f"$$$$$$$$$$$$$$$$$Collision intensity: {self.collision_intensity}")
-        print(f"Collision-free trajectories: {len(trajs_free_idxs)}")
-        print(f"Trajectories in collision: {len(trajs_coll_idxs)}")
+        print(f"Collision-free trajectories: {self.trajs_free_idxs.shape}")
+        print(f"Trajectories in collision: {self.trajs_coll_idxs.shape}")
         if return_indices:
-            return trajs_coll_idxs, trajs_free_idxs
+            return self.trajs_coll_idxs, self.trajs_free_idxs
         else:
             return trajs[trajs_coll_idxs,:,:], trajs[trajs_free_idxs,:,:]
 
     def compute_fraction_free_trajs(self, trajs, **kwargs):
         # Compute the fractions of trajs that are collision free
-        self.use_pb_collision_detection = 1 if self.env.env_name == 'EnvHook3D' else 0
         if self.use_pb_collision_detection:
             trajs_coll_idxs, trajs_free_idxs = self.get_trajs_collision_and_free_pb(trajs, return_indices=True)
         else:

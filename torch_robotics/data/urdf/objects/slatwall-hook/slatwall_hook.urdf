@@ -3,19 +3,19 @@
 
   <link name="base_link">
     <visual>
-      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://slatwall-hook/slatwall.stl" scale="0.008 0.008 0.008"/>
+        <mesh filename="package://slatwall-hook/slatwall.stl" scale="0.002 0.002 0.002"/>
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://slatwall-hook/slatwall_vhacd.obj" scale="0.008 0.008 0.008" />
+        <mesh filename="package://slatwall-hook/slatwall_vhacd.obj" scale="0.002 0.002 0.002" />
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.5"/>
+      <mass value="1.0"/>
       <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
   </link>

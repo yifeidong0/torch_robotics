@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 import itertools
+import os
 
 from torch_robotics.environments.env_base import EnvBase
 from torch_robotics.environments.primitives import ObjectField, MultiSphereField, MeshField
@@ -9,6 +10,9 @@ from torch_robotics.robots import RobotPointMass, RobotPanda
 from torch_robotics.torch_utils.torch_utils import DEFAULT_TENSOR_ARGS
 from torch_robotics.visualizers.planning_visualizer import create_fig_and_axes
 from torch_robotics.environments.grid_map_sdf import GridMapSDF
+from mpd.utils.loading import load_params_from_yaml
+
+DATA_DIR = 'data_trajectories/EnvHook3D-RobotTape3D/0'
 
 class EnvHook3D(EnvBase):
     def __init__(self, 
@@ -17,25 +21,31 @@ class EnvHook3D(EnvBase):
                  precompute_sdf_obj_fixed=False,
                  sdf_cell_size=0.005, 
                  **kwargs):
+        self.args = load_params_from_yaml(os.path.join(DATA_DIR, 'args.yaml'))
         self.precompute_sdf_obj_fixed = precompute_sdf_obj_fixed
         self.sdf_cell_size = sdf_cell_size
         self.env_name = 'EnvHook3D'
         self.env_filename = 'deps/torch_robotics/torch_robotics/data/urdf/objects/slatwall-hook/slatwall_hook.urdf'
-        self.env_position = torch.tensor([0.0, 0.0, 0.0], **tensor_args)
-        self.env_quaternion = torch.tensor([1.0, 0.0, 0.0, 0.0], **tensor_args)
+        self.env_position = torch.tensor(self.args['obstacle_position'], **tensor_args)
+        self.env_quaternion = torch.tensor(self.args['obstacle_orientation'], **tensor_args) # TODO: still manually set
+        self.obstacle_scale = self.args['obstacle_scale']
         
         # hook = MeshField('hook.obj', tensor_args=tensor_args)
         # obj_field = ObjectField([hook], 'hook')
         # obj_list = [obj_field]
         obj_list = []
+        # TODO: visualze the hook with plotly and meshio, 
+        # https://nbviewer.org/github/empet/Hollow-mask-illusion/blob/main/Hollow-Mask-illusion-Animation.ipynb
 
         super().__init__(
             name=name,
-            limits=torch.tensor([[-1, -1, -1], [1, 1, 1]], **tensor_args),  # environments limits
+            limits=torch.tensor([[-1, -1, -1, -3.142, -3.142, -3.142], [1, 1, 1, 3.142, 3.142, 3.142]], 
+                                **tensor_args),  # environments limits
             obj_fixed_list=obj_list,
             tensor_args=tensor_args,
             **kwargs
         )
+        self.dim = 3
     
     # def update_obstacles(self, sphere_centers, sphere_radii):
     #     """
