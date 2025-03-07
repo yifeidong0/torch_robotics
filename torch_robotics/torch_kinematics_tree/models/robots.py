@@ -119,8 +119,9 @@ class DifferentiableShadowHand(DifferentiableTree):
 
 class DifferentiableAllegroHand(DifferentiableTree):
     def __init__(self, link_list: Optional[str] = None, device='cpu'):
-        robot_file = get_robot_path() / 'allegro_hand' / 'allegro_hand.urdf'
-        self.model_path = robot_file.as_posix()
+        # robot_file = get_robot_path() / 'allegro_hand' / 'allegro_hand.urdf'
+        # self.model_path = robot_file.as_posix()
+        self.model_path = '/home/yif/Documents/KTH/git/mpd-cage/deps/torch_robotics/torch_robotics/data/urdf/robots/allegro_hand_description/allegro_hand_description_left.urdf'
         self.name = "differentiable_allegro_hand"
         super().__init__(self.model_path, self.name, link_list=link_list, device=device)
 

@@ -175,8 +175,8 @@ class ViewerRecorder:
 class PandaMotionPlanningIsaacGymEnv:
 
     def __init__(self, env, robot, task,
-                 asset_root="/home/carvalho/Projects/MotionPlanningDiffusion/mpd/deps/isaacgym/assets",
-                 franka_asset_file="urdf/franka_description/robots/franka_panda.urdf",
+                 asset_root="/home/yif/Documents/KTH/git/mpd-cage/deps/isaacgym/assets",
+                 franka_asset_file="/home/yif/Documents/KTH/git/mpd-cage/deps/isaacgym/assets/urdf/franka_description/robots/franka_panda.urdf",
                  controller_type='position',
                  num_envs=8,
                  all_robots_in_one_env=False,

@@ -241,3 +241,43 @@ class RobotPanda(RobotBase):
                 self.render(ax, start_state, color='green')
             if goal_state is not None:
                 self.render(ax, goal_state, color='purple')
+
+
+import pybullet as p
+import time
+def main():
+    # Initialize PyBullet in GUI mode
+    physics_client = p.connect(p.GUI)
+    p.setGravity(0, 0, -9.81)
+
+    # Load Panda robot URDF in PyBullet
+    panda_id = p.loadURDF("/home/yif/Documents/KTH/git/mpd-cage/deps/torch_robotics/torch_robotics/data/urdf/robots/franka_description/panda.urdf", useFixedBase=True)
+
+    # Initialize RobotPanda using PyTorch tensor arguments
+    tensor_args = {'device': 'cpu', 'dtype': torch.float32}
+    robot_panda = RobotPanda(tensor_args=tensor_args)
+
+    # Set initial joint configuration
+    q_init = torch.tensor([0.0, -0.5, 0.0, -2.0, 0.0, 1.5, 0.0], dtype=torch.float32)
+    
+    # Compute forward kinematics (FK) using RobotPanda
+    ee_pose = robot_panda.get_EE_pose(q_init)  # Get end-effector pose
+
+    # Apply the initial joint configuration to PyBullet
+    for i in range(len(q_init)):
+        p.resetJointState(panda_id, i, q_init[i].item())
+
+    # Print EE position and orientation for reference
+    # ee_pos = ee_pose[robot_panda.link_name_ee].translation.squeeze().numpy()
+    # print(f"EE Position: {ee_pos}")
+
+    # Run PyBullet simulation loop
+    while True:
+        p.stepSimulation()
+        time.sleep(1.0 / 240.0)  # Run at 240Hz
+
+    # Disconnect PyBullet (won't reach here due to infinite loop)
+    p.disconnect()
+
+if __name__ == "__main__":
+    main()
