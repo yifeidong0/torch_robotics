@@ -14,6 +14,39 @@ from torch_robotics.torch_planning_objectives.fields.distance_fields import Coll
     CollisionSelfField, CollisionObjectDistanceField
 from torch_robotics.trajectory.utils import interpolate_traj_via_points
 
+# Mapping of 16D robot joints to 20D PyBullet joints (skip fixed joints)
+JOINT_MAP = [0, 1, 2, 3,  # Index Finger
+             5, 6, 7, 8,  # Middle Finger
+             10, 11, 12, 13,  # Ring Finger
+             15, 16, 17, 18]  # T
+PARENT_CHILD_LINK_PAIRS = [(-1, 0), (0, 1), (1, 2), (2, 3), (3, 4),  # Index Finger
+                            (-1, 5), (5, 6), (6, 7), (7, 8), (8, 9),  # Middle Finger
+                            (-1, 10), (10, 11), (11, 12), (12, 13), (13, 14),  # Ring Finger
+                            (-1, 15), (15, 16), (16, 17), (17, 18), (18, 19)]  # Thumb Finger
+
+def check_self_collision(robot_id, visualize=False):
+    """
+    Check if the robot is in self-collision.
+    Returns True if a collision is detected.
+    """
+    for i in range(-1, p.getNumJoints(robot_id)):
+        for j in range(i+1, p.getNumJoints(robot_id)):
+            if (i, j) in PARENT_CHILD_LINK_PAIRS:
+                continue
+
+            contact_points = p.getClosestPoints(robot_id, robot_id, -0.01, i, j)
+            if len(contact_points) > 0:
+                # print(f"    Joint pair ({i}, {j}) has {len(contact_points)} contact points with distance {contact_points[0][8]}")
+
+                # Mark in red of the two links in contact
+                if visualize:
+                    for point in contact_points:
+                        p.addUserDebugLine(point[5], point[6], [1, 0, 0], 5)
+                    time.sleep(5)
+                    p.removeAllUserDebugItems()
+
+                return True
+    return False
 
 class Task(ABC):
 
@@ -35,6 +68,7 @@ class PlanningTask(Task):
     ):
         super().__init__(**kwargs)
         self.use_pb_collision_detection = 1 if self.env.env_name in ['EnvHook3D',] else 0 # NOTE
+        self.use_pb_allegro_self_collision_detection = 1 if self.robot.robot_name == 'RobotAllegro' else 0 # NOTE
         self.ws_limits = self.env.limits if ws_limits is None else ws_limits
         self.ws_min = self.ws_limits[0]
         self.ws_max = self.ws_limits[1]
@@ -393,27 +427,110 @@ class PlanningTask(Task):
         self.trajs_coll_idxs = torch.tensor(trajs_coll_idxs, dtype=torch.long)
         self.trajs_free_idxs = torch.tensor(trajs_free_idxs, dtype=torch.long)
         print(f"$$$$$$$$$$$$$$$$$Collision intensity: {self.collision_intensity}")
-        print(f"Collision-free trajectories: {self.trajs_free_idxs.shape}")
-        print(f"Trajectories in collision: {self.trajs_coll_idxs.shape}")
         if return_indices:
             return self.trajs_coll_idxs, self.trajs_free_idxs
         else:
             return trajs[trajs_coll_idxs,:,:], trajs[trajs_free_idxs,:,:]
 
+    def get_trajs_collision_and_free_pb_allegro_self(self, trajs, return_indices=True, use_gui=False):
+        """Checks self-collision for Allegro hand trajectories using PyBullet.
+
+        Args:
+            trajs (numpy.ndarray): Shape (N, T, 16), where N = number of trajectories, 
+                                T = number of waypoints, 16 = Allegro hand joint angles.
+            return_indices (bool): Whether to return indices of colliding/free trajectories.
+            use_gui (bool): Whether to visualize the simulation.
+
+        Returns:
+            trajs_coll_idxs (list): Indices of trajectories that result in collision.
+            trajs_free_idxs (list): Indices of trajectories that are collision-free.
+        """
+
+        # Initialize PyBullet
+        if use_gui:
+            p.connect(p.GUI)
+        else:
+            p.connect(p.DIRECT)
+
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())  # URDF path
+        p.setGravity(0, 0, -9.81)
+
+        # Load Allegro Hand URDF
+        allegro_id = p.loadURDF(
+            "/home/yif/Documents/KTH/git/mpd-cage/deps/torch_robotics/torch_robotics/data/urdf/robots/allegro_hand_description/allegro_hand_description_left.urdf",
+            useFixedBase=True,
+            globalScaling=10
+        )
+
+        num_waypoints = trajs.shape[1] * trajs.shape[0]
+        trajs_coll_idxs = []
+        trajs_free_idxs = []
+        count_coll = 0
+        count_coll_traj_list = []
+
+        for traj_idx, trajectory in enumerate(trajs):
+            # Reset Allegro hand to initial position
+            collision_detected = False
+            count_coll_traj = 0
+
+            # Simulation loop for the trajectory
+            for step, joint_angles in enumerate(trajectory):
+                # Map 16D to 20D (skip fixed joints)
+                for i, mapped_index in enumerate(JOINT_MAP):
+                    p.resetJointState(allegro_id, mapped_index, joint_angles[i].item())
+
+                p.stepSimulation()
+                time.sleep(0.1) if use_gui else None
+
+                # Check for self-collision
+                if check_self_collision(allegro_id):
+                    # print(f"    Collision detected at traj {traj_idx}, step {step}")
+                    collision_detected = True
+                    count_coll_traj += 1
+                    # break  # Stop checking further waypoints for this trajectory
+            count_coll += count_coll_traj
+            count_coll_traj_list.append(count_coll_traj/len(trajectory))
+
+            # Store result
+            if collision_detected:
+                trajs_coll_idxs.append(traj_idx)
+            else:
+                trajs_free_idxs.append(traj_idx)
+
+        p.disconnect()
+
+        # Compute the fraction of collision-free trajectories
+        self.collision_intensity = count_coll / num_waypoints
+        self.trajs_coll_idxs = torch.tensor(trajs_coll_idxs, dtype=torch.long)
+        self.trajs_free_idxs = torch.tensor(trajs_free_idxs, dtype=torch.long)
+
+        print(f"$$$$$$$$$$$$$$$$$ Collision intensity: {self.collision_intensity}")
+        print(f"$$$$$$$$$$$$$$$$$ Collision intensity per traj: {count_coll_traj_list}")
+
+        if return_indices:
+            return self.trajs_coll_idxs, self.trajs_free_idxs
+        else:
+            return trajs[trajs_coll_idxs, :, :], trajs[trajs_free_idxs, :, :]
+        
     def compute_fraction_free_trajs(self, trajs, **kwargs):
         # Compute the fractions of trajs that are collision free
         if self.use_pb_collision_detection:
             trajs_coll_idxs, trajs_free_idxs = self.get_trajs_collision_and_free_pb(trajs, return_indices=True)
+        elif self.use_pb_allegro_self_collision_detection:
+            trajs_coll_idxs, trajs_free_idxs = self.get_trajs_collision_and_free_pb_allegro_self(trajs, return_indices=True)
         else:
             _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.get_trajs_collision_and_free(trajs, return_indices=True)
         n_trajs_free = trajs_free_idxs.nelement()
         n_trajs_coll = trajs_coll_idxs.nelement()
         self.fraction_free = n_trajs_free/(n_trajs_free + n_trajs_coll)
+        print(f"####Fraction of collision-free trajectories: {self.fraction_free}")
+        print(f"Number of collision-free trajectories: {n_trajs_free}")
+        print(f"Number of trajectories in collision: {n_trajs_coll}")
         return self.fraction_free
     
     def compute_collision_intensity_trajs(self, trajs, **kwargs):
         # Compute the fraction of waypoints that are in collision
-        if self.use_pb_collision_detection:
+        if self.use_pb_collision_detection or self.use_pb_allegro_self_collision_detection:
             return self.collision_intensity
         else:
             _, _, _, _, trajs_waypoints_collisions = self.get_trajs_collision_and_free(trajs, return_indices=True)
@@ -421,7 +538,7 @@ class PlanningTask(Task):
 
     def compute_success_free_trajs(self, trajs, **kwargs):
         # If at least one trajectory is collision free, then we consider success
-        if self.use_pb_collision_detection:
+        if self.use_pb_collision_detection or self.use_pb_allegro_self_collision_detection:
             return int(self.fraction_free > 0)
         else:
             _, trajs_free = self.get_trajs_collision_and_free(trajs)

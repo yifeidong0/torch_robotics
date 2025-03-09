@@ -42,6 +42,8 @@ class PlanningVisualizer:
         if trajs is not None:
             if self.task.use_pb_collision_detection:
                 trajs_coll_idxs, trajs_free_idxs = self.task.get_trajs_collision_and_free_pb(trajs, return_indices=True)
+            elif self.task.use_pb_allegro_self_collision_detection:
+                trajs_coll_idxs, trajs_free_idxs = self.task.get_trajs_collision_and_free_pb_allegro_self(trajs, return_indices=True)
             else:
                 _, trajs_coll_idxs, _, trajs_free_idxs, _ = self.task.get_trajs_collision_and_free(trajs, return_indices=True)
             kwargs['colors'] = []
@@ -152,6 +154,8 @@ class PlanningVisualizer:
         # Separate trajectories in collision and free (not in collision)
         if self.task.use_pb_collision_detection: # TODO:
             trajs_coll, trajs_free = self.task.get_trajs_collision_and_free_pb(trajs, return_indices=False)
+        elif self.task.use_pb_allegro_self_collision_detection:
+            trajs_coll, trajs_free = self.task.get_trajs_collision_and_free_pb_allegro_self(trajs, return_indices=False)
         else:
             trajs_coll, trajs_free = self.task.get_trajs_collision_and_free(trajs)
 

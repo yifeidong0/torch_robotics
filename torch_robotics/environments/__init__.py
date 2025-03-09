@@ -14,3 +14,4 @@ from .env_square_2d import *
 from .env_table_shelf import *
 from .env_cage_2d import *
 from .env_hook_3d import *
+from .env_empty import *

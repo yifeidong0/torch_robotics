@@ -41,6 +41,11 @@ and one fixed link will be added for the tip. -->
         <box size="0.0408 0.1130 0.095"/>
       </geometry>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <!-- ============================================================================= -->
   <!-- FINGERS -->
@@ -59,6 +64,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0082"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_8.0" type="revolute">
     <axis xyz="0 0 1"/>
@@ -80,6 +90,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.027"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_9.0" type="revolute">
     <limit effort="0" lower="-0.196" upper="1.61" velocity="0"/>
@@ -101,6 +116,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0192"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_10.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -122,6 +142,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.01335"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_11.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -144,6 +169,11 @@ and one fixed link will be added for the tip. -->
         <sphere radius="0.012"/>
       </geometry>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_11.0_tip" type="fixed">
     <parent link="link_11.0"/>
@@ -163,6 +193,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0082"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_4.0" type="revolute">
     <axis xyz="0 0 1"/>
@@ -184,6 +219,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.027"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_5.0" type="revolute">
     <limit effort="0" lower="-0.196" upper="1.61" velocity="0"/>
@@ -205,6 +245,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0192"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_6.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -226,6 +271,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.01335"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_7.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -248,6 +298,11 @@ and one fixed link will be added for the tip. -->
         <sphere radius="0.012"/>
       </geometry>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_7.0_tip" type="fixed">
     <parent link="link_7.0"/>
@@ -267,6 +322,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0082"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_0.0" type="revolute">
     <axis xyz="0 0 1"/>
@@ -288,6 +348,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.027"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_1.0" type="revolute">
     <limit effort="0" lower="-0.196" upper="1.61" velocity="0"/>
@@ -309,6 +374,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0192"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_2.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -330,6 +400,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.01335"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_3.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -352,6 +427,11 @@ and one fixed link will be added for the tip. -->
         <sphere radius="0.012"/>
       </geometry>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_3.0_tip" type="fixed">
     <parent link="link_3.0"/>
@@ -399,6 +479,11 @@ and one fixed link will be added for the tip. -->
       <!-- LEFT -->
       <origin rpy="0 0 0" xyz="-0.0179 -0.009 0.0145"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_12.0" type="revolute">
     <axis xyz="+1 0 0"/>
@@ -422,6 +507,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.00885"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_13.0" type="revolute">
     <axis xyz="0 0 -1"/>
@@ -447,6 +537,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.0257"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_14.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -469,6 +564,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.02115"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_15.0" type="revolute">
     <axis xyz="0 1 0"/>
@@ -492,6 +592,11 @@ and one fixed link will be added for the tip. -->
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+    </inertial>
   </link>
   <joint name="joint_15.0_tip" type="fixed">
     <parent link="link_15.0"/>
